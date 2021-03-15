@@ -124,7 +124,7 @@ if __name__ == "__main__":
 
     if st.button("SUBMIT"):
         if uploaded_file is not None:
-            df_shivam = pd.read_excel(uploaded_file)
+            df_shivam = pd.read_excel(uploaded_file, engine='openpyxl')
 
         userList = [i for i in df_shivam["user_id"].to_list() if not isinstance(i, int)]
         lenUserList = len(userList)
