@@ -125,6 +125,7 @@ if __name__ == "__main__":
     lenUserList = len(userList)
     user = userManagement(envUrl, bearerToken)
     userToken = user.generateUserToken()
+    print(user.searchUser())
     results = user.searchUser().get("content")
         
     batches = getBatchDetail(envUrl, bearerToken, userToken)
@@ -180,4 +181,15 @@ if __name__ == "__main__":
         df_swap = pd.DataFrame(out_table)
         df = pd.merge(df_shivam, df_swap, on='user_id', how='outer')
         df.to_csv("MYJBR_COURSE_STATUS.csv", index=False)
-    
+
+    sendEmail(receiver="swapnanilsharma+pwc@gmail.com",
+                  subject="Course Status report for MYJBR dated {}".format(str(datetime.date.today())),
+                  message="""<p>Hi Team,</p>
+                             <p><br></p>
+                             <p>Please find attached the MYJBR Course Status Report on dated {}.</p>
+                             <p><br></p>
+                             <p>Best Regards,</p>
+                             <p>eGov Support Team</p>""".format(str(datetime.date.today())),
+                  cc="swapnanil.sharmah@pwc.com",
+                  filename="MYJBR_COURSE_STATUS.csv")
+
