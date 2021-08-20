@@ -108,11 +108,16 @@ def dataframeToCsv(df, courseId=courseId, batchId=batchId):
                 try:
                     status = getCourseStatus(userId=row[1]['userId'], courseId=courseId, batchId=batchId)
                 except:
-                    sleep(2700)
+                    sleep(900)
                     try:
                         status = getCourseStatus(userId=row[1]['userId'], courseId=courseId, batchId=batchId)
                     except:
-                        break
+                        sleep(900)
+                        try:
+                            status = getCourseStatus(userId=row[1]['userId'], courseId=courseId, batchId=batchId)
+                        except:
+                            break
+                    
         row[1]['GSWS_Course'] = status
     df.to_csv("APGSWS_Report.csv")
 
