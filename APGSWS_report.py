@@ -50,13 +50,23 @@ def getAllBatches():
         'accept': "application/json"
     }
     response = requests.request("POST", url, json=payload, headers=headers)
-    courses = json.loads(response.text).get("result").get("course")
-    courses = dict([(course.get("identifier"), course.get("name")) for course in courses])
+    while True:
+        try:
+            courses = json.loads(response.text).get("result").get("course")
+            courses = dict([(course.get("identifier"), course.get("name")) for course in courses])
+            break
+        except:
+            sleep(60)
 
     url = os.path.join(host, courseBatchListAPI)
     payload = {"request":{"filters":{"courseId": list(courses.keys()),"status":"1"}}}
     response = requests.request("POST", url, json=payload, headers=headers)
-    contents = json.loads(response.text).get("result").get("response").get("content")
+    while True:
+        try:
+            contents = json.loads(response.text).get("result").get("response").get("content")
+            break
+        except:
+            sleep(60)
     return [{content.get("identifier"): {content.get("courseId"): courses.get(content.get("courseId"))}} for content in contents]
 
 def courseParticipants(bearerToken, batchId):
@@ -128,30 +138,13 @@ def dataframeToCsv(df, courseId, batchId):
     df.drop(['Age'], axis=1, inplace=True)
     df[courseName] = ""
     for row in tqdm(df.iterrows(), desc="Generating course progress report.........", mininterval=1):
-        try:
-            status = getCourseStatus(userId=row[1]['userId'], courseId=courseId, batchId=batchId)
-        except:
-            sleep(300)
+        while True:
             try:
                 status = getCourseStatus(userId=row[1]['userId'], courseId=courseId, batchId=batchId)
+                break
             except:
-                sleep(900)
-                try:
-                    status = getCourseStatus(userId=row[1]['userId'], courseId=courseId, batchId=batchId)
-                except:
-                    sleep(900)
-                    try:
-                        status = getCourseStatus(userId=row[1]['userId'], courseId=courseId, batchId=batchId)
-                    except:
-                        sleep(900)
-                        try:
-                            status = getCourseStatus(userId=row[1]['userId'], courseId=courseId, batchId=batchId)
-                        except:
-                            sleep(900)
-                            try:
-                                status = getCourseStatus(userId=row[1]['userId'], courseId=courseId, batchId=batchId)
-                            except:
-                                break
+                #print(f"Sleeping..............")
+                sleep(60)
                     
         row[1][courseName] = status
     df.to_csv(f"APGSWS_Report_{batchId}.csv")
