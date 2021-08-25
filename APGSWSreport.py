@@ -158,7 +158,7 @@ if __name__ == "__main__":
         courseName = list(list(i.values())[0].values())[0]
         userList = getUserDetails(courseParticipants(bearerToken, batchId))
         dataframeToCsv(getUserCSV(userList), courseId=courseId, batchId=batchId)
-        break
+        #break
 
 
 
