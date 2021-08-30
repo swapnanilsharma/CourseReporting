@@ -41,6 +41,24 @@ class userManagement():
         logging.info(f"RESPONSE_CODE: {response.status_code}")
         logging.info(f"RESPONSE: {response.text}")
         return json.loads(response.text).get("result").get("response")
+        
+    def searchUserByUserName(self, userName=None):
+        url = os.path.join(self.envUrl, self.searchUserApi).replace("\\","/")
+        payload = json.dumps({"request": {"query": "", "filters": {"userName": userName}, "limit": 1}})
+        headers = {
+                    'authorization': self.bearerToken,
+                    'content-type': 'application/json',
+                    'x-authenticated-user-token': self.generateUserToken()
+                  }
+
+        response = requests.request("POST", url, data=payload, headers=headers)
+        logging.info(f">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> SEARCH USER <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+        logging.info(f"PAYLOAD: {payload}")
+        logging.info(f"HEADERS: {headers}")
+        logging.info(f"URL: {url}")
+        logging.info(f"RESPONSE_CODE: {response.status_code}")
+        logging.info(f"RESPONSE: {response.text}")
+        return json.loads(response.text).get("result").get("response")
 
     def editUser(self, userId, firstName, dob):
         url = os.path.join(self.envUrl, self.editUserApi).replace("\\","/")
