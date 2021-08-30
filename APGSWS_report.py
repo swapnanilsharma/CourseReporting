@@ -5,6 +5,7 @@ import json
 from statistics import mean
 from tqdm import tqdm
 from time import sleep
+import sqlite3
 
 host = "https://apgsws.in"
 userSearchAPI = "api/user/v1/search"
@@ -13,6 +14,8 @@ userTokenAPI = "auth/realms/sunbird/protocol/openid-connect/token"
 courseStatusAPI = "api/course/v1/content/state/read"
 courseSearchAPI = "api/course/v1/search"
 courseBatchListAPI = "api/course/v1/batch/list"
+
+dbName = "apgsws.db"
 
 
 #courseId = "do_1133310849852375041158"
@@ -80,6 +83,9 @@ def courseParticipants(bearerToken, batchId):
     }
     response = requests.request("POST", url, json=payload, headers=headers)
     return json.loads(response.text).get("result").get("batch").get("participants")
+
+def courseParticipantsFromFile(bearerToken, batchId):
+    pass
 
 def getUserDetails(userList: list):
     url = os.path.join(host, userSearchAPI)
@@ -150,15 +156,53 @@ def dataframeToCsv(df, courseId, batchId):
     df.to_csv(f"APGSWS_Report_{batchId}.csv")
 
 
+
+################################ DB operations ###########################################
+
+
+def createTable(batchId):
+    conn = sqlite3.connect(dbName, check_same_thread=False)
+    conn.execute('''CREATE TABLE IF NOT EXISTS ''' + "table_" + batchId + '''(userId CHAR(100) PRIMARY KEY NOT NULL);''')
+    conn.close()
+
+def addUser(userName, tableName):
+    conn = sqlite3.connect(dbName, check_same_thread=False)
+    tab = "table_"+tableName
+    try:
+        conn.execute('INSERT INTO "{}" VALUES (?)'.format(tab.replace('"', '""')), (userName,))
+    except:
+        conn.commit()
+        conn.close()
+        return False
+    conn.commit()
+    conn.close()
+    return True
+
+def readAllUsers(tableName):
+    conn = sqlite3.connect(dbName, check_same_thread=False)
+    df = pd.read_sql_query('''SELECT * FROM ''' + "table_" + tableName, conn)
+    conn.close()
+    return [d[0] for d in df.values.tolist()]
+
+
+#########################################################################################
+
+
 if __name__ == "__main__":
     allBathes = getAllBatches()
     for i in allBathes:
         batchId = list(i.keys())[0]
+        createTable(batchId)
         courseId = list(list(i.values())[0].keys())[0]
         courseName = list(list(i.values())[0].values())[0]
-        userList = getUserDetails(courseParticipants(bearerToken, batchId))
+        participants = courseParticipants(bearerToken, batchId)
+        #userList = getUserDetails(participants)
+        for user in participants:
+            addUser(user, batchId)
+        finalUserList = readAllUsers(batchId)
+        userList = getUserDetails(finalUserList)
         dataframeToCsv(getUserCSV(userList), courseId=courseId, batchId=batchId)
-        break
+        #break
 
 
 
