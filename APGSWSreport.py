@@ -33,6 +33,31 @@ dbName = "apgsws.db"
 bearerToken = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJqQXk2ME9rWlNxYVNMZmdIWkk5RGZ4WFdqV3pCTllaZiJ9.Z2Xlyfsem7pAUSQb21Pn92fRYcaKUriBSGBd_FmR6EY"
 
 
+def sendEmail(receiver, cc, subject, message, filename, bcc="egovsup2ort@gmail.com", sender="egovsup2ort@gmail.com"):
+    data = MIMEMultipart()
+    data['From'] = sender
+    data['To'] = receiver
+    data['Cc'] = cc
+    data['Bcc'] = bcc
+    data['Subject'] = subject
+    data.attach(MIMEText(message, 'html'))
+    try:
+        attachment = open("{}".format(filename), "rb")
+        p = MIMEBase('application', 'octet-stream')
+        p.set_payload((attachment).read())
+        encoders.encode_base64(p)
+        p.add_header('Content-Disposition', "attachment; filename= %s" % filename)
+        data.attach(p)
+    except FileNotFoundError:
+        pass
+    s = smtplib.SMTP('smtp.gmail.com', 587)
+    s.starttls()
+    s.login(sender, "pwc@1234")
+    text = data.as_string()
+    s.sendmail(receiver, sender, text)
+    s.quit()
+
+
 def userTokenGenerate(bearerToken):
     url = os.path.join(host, userTokenAPI)
     payload = "client_id=lms&username=admin&grant_type=client_credentials&client_secret=7a84906a-b6bc-11eb-8529-0242ac130003"
@@ -143,13 +168,12 @@ def getCourseStatus(userId, courseId, batchId):
 def dataframeToCsv(df, courseId, batchId):
     df.drop(['Age'], axis=1, inplace=True)
     df[courseName] = ""
-    for row in tqdm(df.iterrows(), desc="Generating course progress report.........", mininterval=1):
+    for row in tqdm(df.iterrows(), desc="Generating course progress report for batch {batchId}.............", mininterval=1):
         while True:
             try:
                 status = getCourseStatus(userId=row[1]['userId'], courseId=courseId, batchId=batchId)
                 break
             except:
-                #print(f"Sleeping..............")
                 sleep(60)
                     
         row[1][courseName] = status
@@ -203,7 +227,13 @@ if __name__ == "__main__":
         userList = getUserDetails(finalUserList)
         dataframeToCsv(getUserCSV(userList), courseId=courseId, batchId=batchId)
         #break
-
-
-
-
+        sendEmail(receiver="swapnanilsharma+pwc@gmail.com",
+                  subject="Course Status report for APGSWS dated {}".format(str(datetime.date.today())),
+                  message="""<p>Hi Team,</p>
+                         <p><br></p>
+                         <p>Please find attached the APGSWS Course Status Report on dated {}.</p>
+                         <p><br></p>
+                         <p>Best Regards,</p>
+                         <p>APGSWS Support Team</p>""".format(str(datetime.date.today())),
+                  cc="swapnanil.sharmah@pwc.com",
+                  filename=f"APGSWS_Report_{batchId}.csv")
