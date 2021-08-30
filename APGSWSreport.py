@@ -168,7 +168,7 @@ def getCourseStatus(userId, courseId, batchId):
 def dataframeToCsv(df, courseId, batchId):
     df.drop(['Age'], axis=1, inplace=True)
     df[courseName] = ""
-    for row in tqdm(df.iterrows(), desc="Generating course progress report for batch {batchId}.............", mininterval=1):
+    for row in tqdm(df.iterrows(), desc=f"Generating course progress report for batch {batchId}.............", mininterval=1):
         while True:
             try:
                 status = getCourseStatus(userId=row[1]['userId'], courseId=courseId, batchId=batchId)
