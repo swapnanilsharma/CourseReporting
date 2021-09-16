@@ -1,5 +1,6 @@
-# CourseReporting
+# Sunbird Course Reporting
 
+* Commands
 
 ```
 pip3 install -r requirements.txt
